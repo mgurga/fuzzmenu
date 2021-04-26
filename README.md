@@ -1,10 +1,18 @@
 # fuzzmenu
+
+![screenshot](https://github.com/mgurga/fuzzmenu/raw/master/docs/fuzzmenu.png)
+
 fuzzmenu is a simplified, lighter weight, distro agnostic remake of WhiskerMenu for XFCE.
 Speed is a target for this project and caches application info in ```~/.config/fuzzmenu/```.
 It takes many command line arguments and is highly customizable.
-This application is written in Python 3, uses Tk for the GUI, and has only 3 dependencies.
+Written in Python 3, uses Tk for the GUI, and has only 3 dependencies.
 
-![screenshot](https://github.com/mgurga/fuzzmenu/raw/master/docs/fuzzmenu.png)
+Features:
+- Search by string
+- Add favorite applications
+- Choose custom categories
+- Minimalist user interface
+- Mostly working app icons 
 
 ## Command Line Arguments
 ```
