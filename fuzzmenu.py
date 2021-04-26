@@ -23,6 +23,8 @@ parser.add_argument("-wh", "--height", type=int, default=500)
 parser.add_argument("-c", "--categories", type=str,
                     default="Favorites,All Applications,,Utility,Development,Game,Graphics,Network,Multimedia:Audio:Video,Office,Settings,System:Filesystem",
                     help="categories to show in list")
+parser.add_argument("-dc", "--default-category", type=str, default="Favorites",
+                    help="category to start up to")
 
 args = parser.parse_args()
 
@@ -147,7 +149,7 @@ class FuzzMenu(tk.Frame):
             print("creating app.json")
             self.createAppDb()
 
-        self.openCategory("All Applications")
+        self.openCategory(args.default_category)
 
     def clickSearchBar(self, event):
         self.search_bar.delete(0, 'end')
