@@ -103,12 +103,18 @@ class FuzzMenu(tk.Frame):
         self.curcategory = ""
         self.pack()
 
-        self.master.bind("r", lambda x: self.createAppDb())
-        self.master.bind("R", lambda x: self.flushAppDb())
+        # reloads apps from disk (saves favorites)
+        self.master.bind("<Control-r>", lambda x: self.createAppDb())
 
-        self.search_bar = tk.Entry(self.master, text="search")
+        # clears all data including favorites
+        self.master.bind("<Control-f>", lambda x: self.flushAppDb())
+
+        self.search_bar_str = tk.StringVar(value="Search Applications")
+        self.search_bar_str.trace(
+            "w", lambda name, index, mode, sv=self.search_bar_str: self.searchEdit(sv))
+        self.search_bar = tk.Entry(
+            self.master, textvariable=self.search_bar_str)
         self.search_bar.bind("<FocusIn>", self.clickSearchBar)
-        self.search_bar.insert(0, "Search Applications")
         self.search_bar.pack()
         self.search_bar.place(x=0, y=0, w=args.width, h=20)
 
@@ -153,6 +159,26 @@ class FuzzMenu(tk.Frame):
 
     def clickSearchBar(self, event):
         self.search_bar.delete(0, 'end')
+
+    def searchEdit(self, search):
+        print("searching: " + search.get())
+        specialapps = []
+        normalapps = []
+
+        for app in self.applications:
+            if search.get().lower() in app["Name"].lower():
+                if app["favorite"]:
+                    specialapps.append(app)
+                else:
+                    normalapps.append(app)
+
+        self.curapps = []
+        for sapp in specialapps:
+            self.curapps.append(sapp)
+        for napp in normalapps:
+            self.curapps.append(napp)
+
+        self.updateAppView()
 
     def flushAppDb(self):
         self.applications = []
@@ -312,8 +338,9 @@ class FuzzMenu(tk.Frame):
 
 root = tk.Tk()
 root.title("FuzzMenu")
-root.bind("q", lambda x: root.quit())
+root.resizable(False, False)
 # root.overrideredirect(1)
+root.bind("<Control-q>", lambda x: root.quit())
 
 if args.x == -1:
     args.x = pyautogui.position()[0]
