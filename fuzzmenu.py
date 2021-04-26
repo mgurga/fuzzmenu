@@ -183,6 +183,7 @@ class FuzzMenu(tk.Frame):
                         appconfig["Comment"] = ""
 
                     self.applications.append(appconfig)
+        self.applications = sorted(self.applications, key=lambda x: x["Name"])
 
         self.printwidgetinfo(self.application_frame)
 
@@ -214,6 +215,17 @@ class FuzzMenu(tk.Frame):
         print("opening: " + app["Name"])
         system(app["Exec"] + " &")
 
+    def toggleFavoriteApp(self, app, evt):
+        print("favoriting: " + app["Name"])
+        if app["favorite"]:
+            favoriteapps.remove(app["filename"])
+        else:
+            favoriteapps.append(app["filename"])
+        for sapp in self.applications:
+            if sapp["filename"] == app["filename"]:
+                sapp["favorite"] = not sapp["favorite"]
+        self.updateAppView()
+
     def updateAppView(self):
         appnum = 0
         self.application_frame.empty()
@@ -243,6 +255,10 @@ class FuzzMenu(tk.Frame):
             appframe.bind("<Button-1>", partial(self.openApp, app))
             appname.bind("<Button-1>", partial(self.openApp, app))
             appcom.bind("<Button-1>", partial(self.openApp, app))
+
+            appframe.bind("<Button-2>", partial(self.toggleFavoriteApp, app))
+            appname.bind("<Button-2>", partial(self.toggleFavoriteApp, app))
+            appcom.bind("<Button-2>", partial(self.toggleFavoriteApp, app))
 
             appframe.grid(column=0, row=appnum)
             appnum += 1
