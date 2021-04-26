@@ -25,6 +25,8 @@ parser.add_argument("-c", "--categories", type=str,
                     help="categories to show in list")
 parser.add_argument("-dc", "--default-category", type=str, default="Favorites",
                     help="category to start up to")
+parser.add_argument("-f", "--quit-no-focus", action='store_true', default=False,
+                    help="close fuzzmenu when switch windows")
 
 args = parser.parse_args()
 
@@ -341,6 +343,8 @@ root.title("FuzzMenu")
 root.resizable(False, False)
 # root.overrideredirect(1)
 root.bind("<Control-q>", lambda x: root.quit())
+if args.quit_no_focus:
+    root.bind("<FocusOut>", lambda x: root.quit())
 
 if args.x == -1:
     args.x = pyautogui.position()[0]
