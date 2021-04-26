@@ -275,8 +275,11 @@ class FuzzMenu(tk.Frame):
         self.updateAppView()
 
     def openApp(self, app, evt):
-        print("opening: " + app["Name"])
-        os.system(app["Exec"] + " &")
+        basecall = app["Exec"]
+        basecall = basecall.replace("%F", "~")
+
+        print("opening: " + app["Name"] + " with command: " + basecall)
+        os.system(basecall + " &")
 
     def toggleFavoriteApp(self, app, evt):
         print("toggling favorite on: " + app["Name"] + " to: ", end="")
