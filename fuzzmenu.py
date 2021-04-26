@@ -2,12 +2,12 @@ import tkinter as tk
 import argparse
 import pyautogui
 import configparser
-from os import listdir, system
+import json
+import os
 from functools import partial
 from xdg.IconTheme import getIconPath
+from xdg.BaseDirectory import xdg_config_home
 from PIL import Image, ImageTk
-
-favoriteapps = ["chromium.desktop", "discord.desktop"]
 
 parser = argparse.ArgumentParser(
     description="'lightweight' application launcher")
@@ -98,7 +98,11 @@ class FuzzMenu(tk.Frame):
         self.master = master
         self.applications = []
         self.curapps = []
+        self.curcategory = ""
         self.pack()
+
+        self.master.bind("r", lambda x: self.createAppDb())
+        self.master.bind("R", lambda x: self.flushAppDb())
 
         self.search_bar = tk.Entry(self.master, text="search")
         self.search_bar.bind("<FocusIn>", self.clickSearchBar)
@@ -114,7 +118,7 @@ class FuzzMenu(tk.Frame):
 
         self.application_frame.pack(fill="both", expand=True)
 
-        self.printwidgetinfo(self.application_frame)
+        # self.printwidgetinfo(self.application_frame)
 
         self.application_frame.place(
             x=(min(args.width / 3, 100)), y=20,
@@ -136,8 +140,37 @@ class FuzzMenu(tk.Frame):
                 catbtn.place(x=0, y=caty, width=(min(args.width / 3, 100)))
                 caty += 30
 
-        # load all .desktop files
-        for file in listdir("/usr/share/applications/"):
+        if os.path.isfile(xdg_config_home + "/fuzzmenu/apps.json"):
+            print("loading app.json")
+            self.loadAppDb()
+        else:
+            print("creating app.json")
+            self.createAppDb()
+
+        self.openCategory("All Applications")
+
+    def clickSearchBar(self, event):
+        self.search_bar.delete(0, 'end')
+
+    def flushAppDb(self):
+        self.applications = []
+        self.createAppDb()
+        self.openCategory("All Applications")
+
+    def loadAppDb(self):
+        with open(xdg_config_home + "/fuzzmenu/apps.json", "r") as o:
+            self.applications = json.loads(o.read())
+
+    def createAppDb(self):
+        existingfavorites = []
+        if not self.applications == []:
+            for app in self.applications:
+                if app["favorite"]:
+                    existingfavorites.append(app["filename"])
+
+        self.applications = []
+
+        for file in os.listdir("/usr/share/applications/"):
             if ".desktop" in file:
                 print(file)
                 config = configparser.ConfigParser(
@@ -149,7 +182,7 @@ class FuzzMenu(tk.Frame):
 
                     appconfig["filename"] = file
 
-                    if file in favoriteapps:
+                    if appconfig["filename"] in existingfavorites:
                         appconfig["favorite"] = True
                     else:
                         appconfig["favorite"] = False
@@ -185,16 +218,16 @@ class FuzzMenu(tk.Frame):
                     self.applications.append(appconfig)
         self.applications = sorted(self.applications, key=lambda x: x["Name"])
 
-        self.printwidgetinfo(self.application_frame)
+        os.makedirs(os.path.dirname(
+            xdg_config_home + "/fuzzmenu/"), exist_ok=True)
 
-        self.openCategory("All Applications")
-
-    def clickSearchBar(self, event):
-        self.search_bar.delete(0, 'end')
+        with open(xdg_config_home + "/fuzzmenu/apps.json", "w") as o:
+            o.write(json.dumps(self.applications))
 
     def openCategory(self, cat):
         print("opening category: '" + cat + "'")
         self.curapps = []
+        self.curcategory = cat
 
         if cat == "All Applications":
             for app in self.applications:
@@ -213,18 +246,24 @@ class FuzzMenu(tk.Frame):
 
     def openApp(self, app, evt):
         print("opening: " + app["Name"])
-        system(app["Exec"] + " &")
+        os.system(app["Exec"] + " &")
 
     def toggleFavoriteApp(self, app, evt):
-        print("favoriting: " + app["Name"])
-        if app["favorite"]:
-            favoriteapps.remove(app["filename"])
-        else:
-            favoriteapps.append(app["filename"])
+        print("toggling favorite on: " + app["Name"] + " to: ", end="")
+
         for sapp in self.applications:
             if sapp["filename"] == app["filename"]:
                 sapp["favorite"] = not sapp["favorite"]
-        self.updateAppView()
+                print(sapp["favorite"])
+
+        if self.curcategory == "Favorites":
+            self.openCategory(self.curcategory)
+
+        os.makedirs(os.path.dirname(
+            xdg_config_home + "/fuzzmenu/"), exist_ok=True)
+
+        with open(xdg_config_home + "/fuzzmenu/apps.json", "w") as o:
+            o.write(json.dumps(self.applications))
 
     def updateAppView(self):
         appnum = 0
